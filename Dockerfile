@@ -6,6 +6,7 @@ LABEL maintainer="CanyonGBS"
 ARG POSTGRES_VERSION=15
 
 RUN install-php-extensions \
+    bcmath \
     gd \
     intl \
     imagick \
