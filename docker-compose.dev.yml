@@ -1,5 +1,6 @@
 services:
   advisingapp.local:
+    entrypoint: php artisan octane:frankenphp --workers=1 --max-requests=1 --port=443 --admin-port=2019 --https
     build:
       target: development
       args:
@@ -8,6 +9,7 @@ services:
         USER_ID: '${SPIN_USER_ID:-9999}'
         GROUP_ID: '${SPIN_GROUP_ID:-9999}'
     environment:
+      SERVER_NAME: '*.advisingapp.local'
       SSL_MODE: "mixed"
       LANDLORD_MIGRATE: '${LANDLORD_MIGRATE:-true}'
       TENANT_MIGRATE: '${TENANT_MIGRATE:-true}'
@@ -34,13 +36,13 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.advisingapp-app.rule=HostRegexp(`advisingapp.local`, `{subdomain:[a-z0-9]+}.advisingapp.local`)"
       - "traefik.http.routers.advisingapp-app.entrypoints=websecure"
-      - "traefik.http.routers.advisingapp-app.tls=true"
+      - "traefik.http.routers.advisingapp-app.tls=tls"
       - "traefik.http.services.advisingapp-app.loadbalancer.server.port=443"
       - "traefik.http.services.advisingapp-app.loadbalancer.server.scheme=https"
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     volumes:
-      - '.:/var/www/html'
+      - '.:/app'
     networks:
       cgbs-development:
         ipv4_address: 172.16.1.3

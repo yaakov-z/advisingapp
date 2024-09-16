@@ -1,13 +1,22 @@
-FROM ghcr.io/roadrunner-server/roadrunner:2023.3.12 AS roadrunner
-FROM serversideup/php:8.2-fpm-nginx-v2.2.1 AS base
+FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS base
 
 LABEL authors="CanyonGBS"
 LABEL maintainer="CanyonGBS"
 
 ARG POSTGRES_VERSION=15
 
+RUN install-php-extensions \
+    gd \
+    intl \
+    imagick \
+    pcov \
+    pdo_pgsql \
+    pcntl \
+    redis \
+    xdebug
+
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git gnupg php8.2-imagick php8.2-pcov php8.2-pgsql php8.2-redis php8.2-xdebug s6 unzip zip \
+    && apt-get install -y --no-install-recommends git gnupg s6 zip \
     && curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
@@ -41,28 +50,10 @@ ARG TOTAL_QUEUE_WORKERS=3
 COPY ./docker/generate-queues.sh /generate-queues.sh
 RUN chmod +x /generate-queues.sh
 
-COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY ./docker/nginx/site-opts.d /etc/nginx/site-opts.d
-
-RUN rm /etc/s6-overlay/s6-rc.d/user/contents.d/php-fpm
-RUN rm -rf /etc/s6-overlay/s6-rc.d/php-fpm
-
-COPY --from=roadrunner /usr/bin/rr /var/www/html/rr
-RUN chmod 0755 /var/www/html/rr
-
-RUN apt-get update \
-    && apt-get upgrade -y
+# RUN apt-get update \
+#     && apt-get upgrade -y
 
 FROM base AS development
-
-# Fix permission issues in development by setting the "webuser"
-# user to the same user and group that is running docker.
-COPY ./docker/set-id /set-id
-
-ARG USER_ID
-ARG GROUP_ID
-RUN set-id webuser ${USER_ID} ${GROUP_ID} ; \
-    rm /set-id
 
 ARG MULTIPLE_DEVELOPMENT_QUEUES=false
 
@@ -81,6 +72,8 @@ RUN rm /generate-queues.sh
 
 RUN chown -R "$PUID":"$PGID" /var/www/html \
     && chmod g+s -R /var/www/html
+
+ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
 
 FROM base AS deploy
 
@@ -106,5 +99,4 @@ RUN chown -R "$PUID":"$PGID" /var/www/html \
     && chmod g+s /var/www/html/storage/logs \
     && find /var/www/html -type d -print0 | xargs -0 chmod 755 \
     && find /var/www/html \( -path /var/www/html/docker -o -path /var/www/html/node_modules -o -path /var/www/html/vendor \) -prune -o -type f -print0 | xargs -0 chmod 644 \
-    && chmod -R ug+rwx /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod 0755 /var/www/html/rr
+    && chmod -R ug+rwx /var/www/html/storage /var/www/html/bootstrap/cache
