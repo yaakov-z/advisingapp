@@ -89,7 +89,10 @@ RUN echo '' | pecl install igbinary \
 RUN curl -L https://github.com/dunglas/frankenphp/archive/refs/heads/main.tar.gz | tar xz \
     && cd ./frankenphp-main/caddy/frankenphp \
     && CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" go build \
-    && mv frankenphp /var/www/html
+    && mv frankenphp /var/www/html \
+    && chmod +x /var/www/html/frankenphp \
+    && cd ../.. \
+    && rm -rf ./frankenphp-main
 
 RUN curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
