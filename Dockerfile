@@ -1,4 +1,4 @@
-FROM ghcr.io/roadrunner-server/roadrunner:2023.3.12 AS roadrunner
+# FROM ghcr.io/roadrunner-server/roadrunner:2023.3.12 AS roadrunner
 FROM serversideup/php:8.2-fpm-nginx-v2.2.1 AS base
 
 LABEL authors="CanyonGBS"
@@ -7,7 +7,63 @@ LABEL maintainer="CanyonGBS"
 ARG POSTGRES_VERSION=15
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git gnupg php8.2-imagick php8.2-pcov php8.2-pgsql php8.2-redis php8.2-xdebug s6 unzip zip \
+    && apt-get install -y --no-install-recommends git \
+    gnupg \
+    php-pear \
+    build-essential \
+    autoconf \
+    libtool \
+    bison \
+    re2c \
+    pkg-config \
+    libxml2-dev \
+    # May not need sqlite3
+    sqlite3 \
+    libsqlite3-dev \
+    software-properties-common \
+    # I don't think we need brotli
+    brotli \
+    libbrotli-dev \
+    libpq-dev \
+    # Required for PHP
+    libcurl4-openssl-dev \
+    zlib1g-dev \
+    libssl-dev \
+    libffi-dev \
+    libpng-dev \
+    libonig-dev \
+    libsodium-dev \
+    libxslt-dev \
+    libxslt1-dev \
+    libzip-dev \
+    libmagickwand-dev \
+    libmagickcore-dev \
+    && add-apt-repository ppa:longsleep/golang-backports -y \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends golang-go
+
+# Update this version to be dynamic
+RUN curl -L https://www.php.net/distributions/php-8.2.23.tar.gz | tar xz \
+    && cd php-8.2.23 \
+    && ./configure \
+    --enable-embed \
+    --enable-zts \
+    --disable-zend-signals \
+    --enable-zend-max-execution-timers \
+    --with-curl \
+    --with-openssl \
+    --enable-bcmath \
+    && make -j"$(getconf _NPROCESSORS_ONLN)" \
+    && make install \
+    && cd .. \
+    && rm -rf php-8.2.23
+
+RUN curl -L https://github.com/dunglas/frankenphp/archive/refs/heads/main.tar.gz | tar xz \
+    && cd ./frankenphp-main/caddy/frankenphp \
+    && CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" go build
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends php8.2-xdebug s6 unzip zip \
     && curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
@@ -47,11 +103,11 @@ COPY ./docker/nginx/site-opts.d /etc/nginx/site-opts.d
 RUN rm /etc/s6-overlay/s6-rc.d/user/contents.d/php-fpm
 RUN rm -rf /etc/s6-overlay/s6-rc.d/php-fpm
 
-COPY --from=roadrunner /usr/bin/rr /var/www/html/rr
-RUN chmod 0755 /var/www/html/rr
+# COPY --from=roadrunner /usr/bin/rr /var/www/html/rr
+# RUN chmod 0755 /var/www/html/rr
 
-RUN apt-get update \
-    && apt-get upgrade -y
+# RUN apt-get update \
+#     && apt-get upgrade -y
 
 FROM base AS development
 
