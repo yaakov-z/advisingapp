@@ -90,7 +90,7 @@ RUN curl -L https://github.com/dunglas/frankenphp/archive/refs/heads/main.tar.gz
     && cd ./frankenphp-main/caddy/frankenphp \
     && CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" go build \
     && chmod +x frankenphp \
-    && mv frankenphp /var/www/html \
+    && mv frankenphp /usr/local/bin \
     && cd ../.. \
     && rm -rf ./frankenphp-main
 

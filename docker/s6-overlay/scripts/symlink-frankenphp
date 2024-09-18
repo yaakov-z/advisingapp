@@ -1,0 +1,14 @@
+#!/command/with-contenv bash
+
+ln -s /usr/bin/frankenphp /var/www/html/frankenphp
+
+{
+    ln -s /usr/bin/frankenphp /var/www/html/frankenphp \
+    && echo "Symlinked FrankenPHP..."
+} || {
+    echo "Failed to symlink FrankenPHP!"
+
+    exit 1
+}
+
+exit 0
