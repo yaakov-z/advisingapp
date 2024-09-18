@@ -133,6 +133,11 @@ COPY ./docker/nginx/site-opts.d /etc/nginx/site-opts.d
 RUN rm /etc/s6-overlay/s6-rc.d/user/contents.d/php-fpm
 RUN rm -rf /etc/s6-overlay/s6-rc.d/php-fpm
 
+RUN mkdir -p /data/caddy && chown -R "$PUID":"$PGID" /data/caddy && mkdir -p /config/caddy && chown -R "$PUID":"$PGID" /config/caddy
+
+COPY ./docker/php /usr/local/bin/php
+RUN chmod +x /usr/local/bin/php
+
 # RUN apt-get update \
 #     && apt-get upgrade -y
 
