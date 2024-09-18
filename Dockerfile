@@ -129,9 +129,6 @@ COPY ./docker/nginx/site-opts.d /etc/nginx/site-opts.d
 RUN rm /etc/s6-overlay/s6-rc.d/user/contents.d/php-fpm
 RUN rm -rf /etc/s6-overlay/s6-rc.d/php-fpm
 
-# COPY --from=roadrunner /usr/bin/rr /var/www/html/rr
-# RUN chmod 0755 /var/www/html/rr
-
 # RUN apt-get update \
 #     && apt-get upgrade -y
 
@@ -188,5 +185,4 @@ RUN chown -R "$PUID":"$PGID" /var/www/html \
     && chmod g+s /var/www/html/storage/logs \
     && find /var/www/html -type d -print0 | xargs -0 chmod 755 \
     && find /var/www/html \( -path /var/www/html/docker -o -path /var/www/html/node_modules -o -path /var/www/html/vendor \) -prune -o -type f -print0 | xargs -0 chmod 644 \
-    && chmod -R ug+rwx /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod 0755 /var/www/html/rr
+    && chmod -R ug+rwx /var/www/html/storage /var/www/html/bootstrap/cache
