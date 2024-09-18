@@ -9,6 +9,7 @@ ARG POSTGRES_VERSION=15
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
     gnupg \
+    s6 unzip zip \
     php-pear \
     build-essential \
     autoconf \
@@ -17,15 +18,10 @@ RUN apt-get update \
     re2c \
     pkg-config \
     libxml2-dev \
-    # May not need sqlite3
-    sqlite3 \
     libsqlite3-dev \
     software-properties-common \
-    # I don't think we need brotli
-    brotli \
     libbrotli-dev \
     libpq-dev \
-    # Required for PHP
     libcurl4-openssl-dev \
     zlib1g-dev \
     libssl-dev \
@@ -42,6 +38,8 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y --no-install-recommends golang-go
 
+COPY ./docker/php.ini /etc/php/8.2/cli/php.ini
+
 # Update this version to be dynamic
 RUN curl -L https://www.php.net/distributions/php-8.2.23.tar.gz | tar xz \
     && cd php-8.2.23 \
@@ -50,21 +48,49 @@ RUN curl -L https://www.php.net/distributions/php-8.2.23.tar.gz | tar xz \
     --enable-zts \
     --disable-zend-signals \
     --enable-zend-max-execution-timers \
-    --with-curl \
-    --with-openssl \
+    --with-config-file-path=/etc/php/8.2/cli \
+    --with-zlib \
     --enable-bcmath \
+    --enable-calendar \
+    --with-curl \
+    --enable-exif \
+    --enable-pcntl \
+    --with-sodium \
+    --enable-mbstring \
+    --enable-ftp \
+    --enable-gd \
+    --with-gettext \
+    --enable-intl \
+    --with-ffi \
+    --with-pgsql=/usr/local/pgsql \
+    --with-pdo-pgsql \
+    --with-readline \
+    --enable-shmop \
+    --enable-soap \
+    --enable-sockets \
+    --enable-sysvmsg \
+    --enable-sysvsem \
+    --enable-sysvshm \
+    --with-xsl \
+    --with-openssl \
+    --with-zip \
     && make -j"$(getconf _NPROCESSORS_ONLN)" \
     && make install \
     && cd .. \
     && rm -rf php-8.2.23
 
+RUN echo '' | pecl install igbinary \
+    && echo '' | pecl install redis \
+    && echo '' | pecl install imagick \
+    && echo '' | pecl install xdebug \
+    && echo '' | pecl install pcov
+
 RUN curl -L https://github.com/dunglas/frankenphp/archive/refs/heads/main.tar.gz | tar xz \
     && cd ./frankenphp-main/caddy/frankenphp \
-    && CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" go build
+    && CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" go build \
+    && mv frankenphp /var/www/html
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends php8.2-xdebug s6 unzip zip \
-    && curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
+RUN curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-"$POSTGRES_VERSION" \
