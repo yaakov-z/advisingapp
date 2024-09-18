@@ -34,6 +34,7 @@ RUN apt-get update \
     libzip-dev \
     libmagickwand-dev \
     libmagickcore-dev \
+    libreadline-dev \
     && add-apt-repository ppa:longsleep/golang-backports -y \
     && apt-get update \
     && apt-get install -y --no-install-recommends golang-go
