@@ -89,8 +89,8 @@ RUN echo '' | pecl install igbinary \
 RUN curl -L https://github.com/dunglas/frankenphp/archive/refs/heads/main.tar.gz | tar xz \
     && cd ./frankenphp-main/caddy/frankenphp \
     && CGO_CFLAGS=$(php-config --includes) CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" go build \
+    && chmod +x frankenphp \
     && mv frankenphp /var/www/html \
-    && chmod +x /var/www/html/frankenphp \
     && cd ../.. \
     && rm -rf ./frankenphp-main
 
