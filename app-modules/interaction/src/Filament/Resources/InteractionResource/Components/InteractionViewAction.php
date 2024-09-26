@@ -37,38 +37,38 @@
 namespace AdvisingApp\Interaction\Filament\Resources\InteractionResource\Components;
 
 use Filament\Actions\ViewAction;
-use AdvisingApp\Interaction\Models\Interaction;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\TextEntry;
+use AdvisingApp\Interaction\Models\Interaction;
 
 class InteractionViewAction extends ViewAction
 {
-  protected function setUp(): void
-  {
-      parent::setUp();
+    protected function setUp(): void
+    {
+        parent::setUp();
 
-      $this->infolist(
-        [
-          TextEntry::make('user.name')
-              ->label('Created By'),
-          Fieldset::make('Content')
-              ->schema([
-                  TextEntry::make('subject')
-                      ->hidden(fn ($state): bool => blank($state))
-                      ->columnSpanFull(),
-                  TextEntry::make('description')
-                      ->getStateUsing(fn (Interaction $interaction): string => $interaction->description)
-                      ->columnSpanFull(),
-              ]),
-          Fieldset::make('Interaction Information')
-          ->schema([
-              TextEntry::make('type.name')
-                      ->label('Type'),
-              TextEntry::make('created_at')
-                      ->label('Created At')
-                      ->hidden(fn (Interaction $interaction): bool => is_null($interaction->created_at)),
-          ]),
-      ]
-    );
-  }
+        $this->infolist(
+            [
+                TextEntry::make('user.name')
+                    ->label('Created By'),
+                Fieldset::make('Content')
+                    ->schema([
+                        TextEntry::make('subject')
+                            ->hidden(fn ($state): bool => blank($state))
+                            ->columnSpanFull(),
+                        TextEntry::make('description')
+                            ->getStateUsing(fn (Interaction $interaction): string => $interaction->description)
+                            ->columnSpanFull(),
+                    ]),
+                Fieldset::make('Interaction Information')
+                    ->schema([
+                        TextEntry::make('type.name')
+                            ->label('Type'),
+                        TextEntry::make('created_at')
+                            ->label('Created At')
+                            ->hidden(fn (Interaction $interaction): bool => is_null($interaction->created_at)),
+                    ]),
+            ]
+        );
+    }
 }

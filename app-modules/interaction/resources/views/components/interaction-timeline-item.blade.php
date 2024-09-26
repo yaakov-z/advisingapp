@@ -43,10 +43,10 @@
             </a>
             <span class="ml-2 flex space-x-2">
                 <div class="relative">
-                  <x-filament::icon
-                      class="h-5 w-5 text-gray-400 dark:text-gray-100"
-                      icon="heroicon-o-pencil-square"
-                  />
+                    <x-filament::icon
+                        class="h-5 w-5 text-gray-400 dark:text-gray-100"
+                        icon="heroicon-o-pencil-square"
+                    />
                 </div>
             </span>
         </h3>
